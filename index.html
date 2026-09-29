@@ -266,7 +266,7 @@ function voterForm() {
     oninput: (e) => { ui.name = e.target.value; ui.confirming = false; store.set('name', ui.name); updateForm(); } });
   return [
     h('h1', { class: 'rise' }, 'Which story is ', h('em', {}, 'the lie?')),
-    h('p', { class: 'lede' }, 'Two of these happened. One did not. Pick the one you think Kay made up.'),
+    h('p', { class: 'lede' }, 'Two of these happened. One did not. Pick the one you think Kayleigh made up.'),
     h('label', { class: 'label', for: 'name' }, 'Your name'),
     input,
     h('p', { class: 'label' }, 'Your suspect'),
