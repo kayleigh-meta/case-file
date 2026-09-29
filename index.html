@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B0D12">
+<title>Kay's Case File · Live Vote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0B0D12; --card: #151922; --card-2: #1C212C; --line: #2A3040;
+  --paper: #F2EEE6; --mist: #B9B5C3; --dim: #7A7787;
+  --lime: #C9FF3D; --red: #FF4B3E;
+  --head: 'Archivo', 'Franklin Gothic Heavy', 'Arial Black', sans-serif;
+  --mono: 'Courier Prime', 'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--ink); color: var(--paper); font-family: var(--head); -webkit-font-smoothing: antialiased; }
+body { min-height: 100vh; min-height: 100dvh; }
+button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+input { font: inherit; }
+.tag { display: inline-flex; align-items: center; gap: 8px; background: var(--lime); color: var(--ink); font: 700 12px/1 var(--mono);
+  letter-spacing: .08em; text-transform: uppercase; padding: 7px 10px; }
+.tag.red { background: var(--red); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+.live .dot { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .25; } }
+.mono { font-family: var(--mono); font-weight: 700; }
+.stamp { display: inline-block; border: 4px solid currentColor; border-radius: 8px; padding: 6px 16px; font: 900 28px/1 var(--head);
+  letter-spacing: .12em; text-transform: uppercase; transform: rotate(-7deg); background: rgba(11,13,18,.55); }
+.stamp.slam { animation: slam .32s cubic-bezier(.55,0,1,.45) both; }
+@keyframes slam { from { transform: rotate(-7deg) scale(2.6); opacity: 0; } 60% { opacity: 1; } to { transform: rotate(-7deg) scale(1); opacity: 1; } }
+.rise { animation: rise .5s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes rise { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
+.bar-track { height: 100%; background: var(--card-2); border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; width: 0; background: var(--lime); border-radius: 6px; transition: width .8s cubic-bezier(.2,.8,.2,1), background .4s; }
+.hidden { display: none !important; }
+
+/* ── voter (phone) ─────────────────────────────────────────── */
+.voter { max-width: 520px; margin: 0 auto; padding: 22px 18px 40px; }
+.voter h1 { font-weight: 900; font-size: clamp(38px, 11vw, 54px); line-height: .95; letter-spacing: -.01em; margin: 20px 0 12px; }
+.voter h1 em { font-style: normal; color: var(--lime); }
+.voter .lede { color: var(--mist); font: 400 16px/1.45 var(--head); margin-bottom: 22px; }
+.label { font: 700 12px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mist); margin: 0 0 8px; }
+.name { width: 100%; background: var(--card); border: 2px solid var(--line); border-radius: 10px; color: var(--paper); padding: 14px 14px;
+  font: 500 18px/1 var(--head); outline: none; margin-bottom: 20px; }
+.name:focus { border-color: var(--lime); }
+.cases { display: grid; gap: 10px; margin-bottom: 18px; }
+.case { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; text-align: left; background: var(--card);
+  border: 2px solid var(--line); border-radius: 12px; padding: 14px 14px; transition: border-color .15s, background .15s, transform .1s; }
+.case:active { transform: scale(.99); }
+.case .n { font: 900 34px/1 var(--head); color: var(--lime); }
+.case .t { font: 800 18px/1.15 var(--head); }
+.case .s { font: 400 14px/1.35 var(--head); color: var(--mist); margin-top: 3px; }
+.case .pick { font: 700 11px/1 var(--mono); letter-spacing: .1em; color: var(--dim); border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 10px; }
+.case[aria-pressed="true"] { border-color: var(--lime); background: #1b2211; }
+.case[aria-pressed="true"] .pick { background: var(--lime); color: var(--ink); border-color: var(--lime); }
+.submit { width: 100%; background: var(--lime); color: var(--ink); border-radius: 12px; padding: 18px; font: 900 19px/1 var(--head); letter-spacing: .02em; }
+.submit:disabled { background: var(--card-2); color: var(--dim); cursor: not-allowed; }
+.submit.confirm { background: var(--red); color: var(--ink); }
+.fine { color: var(--dim); font: 400 13px/1.4 var(--mono); margin-top: 12px; text-align: center; }
+.panel { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 20px 18px; margin-top: 18px; }
+.center { text-align: center; }
+.big-stamp { margin: 26px auto 8px; font-size: 27px; }
+.split { display: grid; gap: 14px; margin-top: 14px; }
+.split-row .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font: 800 16px/1.1 var(--head); }
+.split-row .pct { font: 700 15px/1 var(--mono); color: var(--mist); }
+.split-row .bar-track { height: 12px; }
+.split-row.mine .top { color: var(--lime); }
+.split-row.lie .bar-fill { background: var(--red); }
+.split-row.lie .top { color: var(--red); }
+.verdict { font: 900 clamp(40px, 12vw, 60px)/.95 var(--head); margin: 18px 0 10px; }
+.verdict.good { color: var(--lime); } .verdict.bad { color: var(--red); }
+.status { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+.conn { font: 700 11px/1 var(--mono); color: var(--dim); letter-spacing: .08em; text-transform: uppercase; }
+.conn.ok { color: var(--lime); }
+
+/* ── host (big screen) ─────────────────────────────────────── */
+.host { height: 100vh; height: 100dvh; display: grid; grid-template-columns: minmax(320px, 34%) 1fr; grid-template-rows: auto 1fr auto;
+  gap: 0 4vw; padding: 3.2vh 4vw 2.4vh; overflow: hidden; }
+.host header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 3vh; }
+.host .left { display: flex; flex-direction: column; min-height: 0; }
+.host h1 { font: 900 clamp(44px, 6.4vw, 110px)/.9 var(--head); letter-spacing: -.015em; }
+.host h1 em { font-style: normal; color: var(--lime); }
+.host .sub { color: var(--mist); font: 400 clamp(15px, 1.35vw, 22px)/1.4 var(--head); margin: 2.2vh 0 3vh; max-width: 30ch; }
+.join { display: flex; gap: 20px; align-items: center; background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 16px; }
+.qr { background: #fff; padding: 10px; border-radius: 10px; line-height: 0; flex: none; }
+.qr img, .qr canvas { width: clamp(120px, 12vw, 200px) !important; height: auto !important; }
+.join .how { font: 800 clamp(16px, 1.5vw, 24px)/1.15 var(--head); }
+.join .url { font: 700 clamp(11px, .9vw, 15px)/1.35 var(--mono); color: var(--lime); word-break: break-all; margin-top: 8px; }
+.total { margin-top: auto; padding-top: 3vh; }
+.total .num { font: 900 clamp(60px, 8vw, 140px)/.85 var(--head); }
+.total .cap { font: 700 clamp(12px, 1vw, 16px)/1.3 var(--mono); color: var(--mist); letter-spacing: .08em; text-transform: uppercase; margin-top: 8px; }
+.feed { font: 700 clamp(12px, 1vw, 16px)/1.5 var(--mono); color: var(--dim); margin-top: 10px; min-height: 1.5em; }
+.feed b { color: var(--paper); }
+.rows { display: flex; flex-direction: column; justify-content: center; gap: 3.2vh; min-height: 0; }
+.row { position: relative; display: grid; grid-template-columns: clamp(70px, 7vw, 120px) 1fr; gap: 0 1.6vw; align-items: start; }
+.row .n { font: 900 clamp(48px, 5.4vw, 96px)/.85 var(--head); color: var(--lime); transition: color .4s; }
+.row .t { display: flex; justify-content: space-between; align-items: baseline; font: 800 clamp(18px, 1.9vw, 32px)/1 var(--head); margin-bottom: 1.1vh; }
+.row .count { font: 700 clamp(15px, 1.4vw, 24px)/1 var(--mono); color: var(--mist); white-space: nowrap; }
+.row .count b { color: var(--paper); font-size: 1.3em; }
+.row .bar-track { height: clamp(18px, 2.6vh, 34px); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1vh; min-height: 26px; }
+.chip { font: 700 clamp(11px, .9vw, 15px)/1 var(--mono); background: var(--card-2); color: var(--paper); border-radius: 999px; padding: 6px 10px; animation: rise .4s both; }
+.chip.more { color: var(--dim); }
+.row.lie .n, .row.lie .t { color: var(--red); }
+.row.lie .bar-fill { background: var(--red); }
+.row.true .bar-fill { background: var(--dim); }
+.row.true .n { color: var(--dim); }
+.row.lie .chip { background: #3a1a18; }
+.row .row-stamp { position: absolute; left: 58%; top: -1.4vh; font-size: clamp(22px, 2.4vw, 40px); }
+.row.lie .row-stamp { color: var(--red); } .row.true .row-stamp { color: var(--lime); }
+.host footer { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 2vh; opacity: .35; transition: opacity .2s; }
+.host footer:hover, .host footer:focus-within { opacity: 1; }
+.ctl { font: 700 13px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1.5px solid var(--line); border-radius: 999px; padding: 10px 14px; color: var(--mist); }
+.ctl:hover { border-color: var(--mist); color: var(--paper); }
+.ctl.primary { border-color: var(--lime); color: var(--lime); }
+.ctl.danger { border-color: #5a2522; color: var(--red); }
+.ctl.pick { border-color: var(--red); color: var(--red); }
+.spacer { flex: 1; }
+.overlay { position: fixed; inset: 0; background: rgba(11,13,18,.92); display: grid; place-items: center; z-index: 10; }
+.count-num { font: 900 min(52vh, 40vw)/1 var(--head); color: var(--lime); animation: punch .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes punch { from { transform: scale(1.6); opacity: 0; } 25% { opacity: 1; } 80% { transform: scale(1); opacity: 1; } to { opacity: 0; } }
+.overlay .stamp { font-size: min(12vh, 9vw); color: var(--red); }
+.confetti { position: fixed; top: -20px; width: 10px; height: 16px; z-index: 20; pointer-events: none; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+@media (max-width: 860px) {
+  .host { height: auto; display: block; padding: 20px 16px; }
+  .host .rows { margin-top: 28px; }
+  .total { margin-top: 22px; }
+  .host footer { opacity: 1; margin-top: 24px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// Kay's Case File: live "two truths, one lie" vote.
+// Phones open the plain URL; the big screen opens the same URL with #host.
+// Votes travel through a public ntfy.sh channel (no accounts, messages kept 12 hours).
+const TOPIC = 'kay-casefile-45e8996732438867';
+const RELAY = 'https://ntfy.sh/' + TOPIC;
+
+const CASES = [
+  { n: '01', t: 'The test centre', s: 'Four attempts. Four brand-new ways to fail.' },
+  { n: '02', t: 'The stairwell', s: 'A phone, a stairwell and a lot of confidence.' },
+  { n: '03', t: 'The birthday bet', s: 'Rock Paper Scissors decided. I jumped.' },
+];
+const IS_HOST = location.hash.toLowerCase().startsWith('#host');
+const VOTER_URL = location.origin + location.pathname;
+const $app = document.getElementById('app');
+
+// ── tiny helpers ──────────────────────────────────────────────
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return el;
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const store = {
+  get(k) { try { return localStorage.getItem('kcf:' + k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem('kcf:' + k, v); } catch {} },
+};
+const cleanName = (s) => String(s ?? '').replace(/[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁠-⁯]/g, '').trim().slice(0, 24) || 'Anonymous';
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+let myId = store.get('id');
+if (!myId) { myId = Math.random().toString(36).slice(2, 12); store.set('id', myId); }
+
+// ── shared state: every message is replayed and reduced into one state ──
+const messages = new Map();
+let arrival = 0;
+let state = reduce();
+let connected = false;
+
+function ingest(m) {
+  if (!m || m.event !== 'message' || messages.has(m.id)) return;
+  let d; try { d = JSON.parse(m.message); } catch { return; }
+  if (!d || typeof d !== 'object') return;
+  messages.set(m.id, { time: m.time, seq: arrival++, d });
+  scheduleRender();
+}
+
+function reduce() {
+  const fresh = (round) => ({ round, locked: false, answer: 0, votes: new Map(), order: [] });
+  let S = fresh('r0');
+  const list = [...messages.values()].sort((a, b) => a.time - b.time || a.seq - b.seq);
+  for (const { d, time } of list) {
+    if (d.t === 'reset' && typeof d.r === 'string') { S = fresh(d.r); continue; }
+    if (d.r !== S.round) continue;
+    if (d.t === 'vote') {
+      const p = Number(d.p);
+      if (S.locked || S.answer || ![1, 2, 3].includes(p) || typeof d.v !== 'string' || S.votes.has(d.v)) continue;
+      S.votes.set(d.v, { p, name: cleanName(d.n), time });
+      S.order.push(d.v);
+    } else if (d.t === 'lock') S.locked = true;
+    else if (d.t === 'unlock' && !S.answer) S.locked = false;
+    else if (d.t === 'reveal' && [1, 2, 3].includes(Number(d.a))) { S.answer = Number(d.a); S.locked = true; }
+  }
+  S.counts = [0, 0, 0];
+  for (const v of S.votes.values()) S.counts[v.p - 1]++;
+  S.total = S.votes.size;
+  return S;
+}
+
+async function send(d) {
+  for (let attempt = 0; attempt < 7; attempt++) {
+    try {
+      const r = await fetch(RELAY, { method: 'POST', body: JSON.stringify(d) });
+      if (r.ok) { ingest(await r.json()); return true; }
+      if (r.status !== 429 && r.status < 500) return false;
+    } catch {}
+    await sleep(Math.min(1200 * 2 ** attempt, 15000));
+  }
+  return false;
+}
+
+function connect() {
+  const es = new EventSource(RELAY + '/sse?since=all');
+  es.addEventListener('open', () => { connected = true; scheduleRender(); });
+  es.onmessage = (e) => { try { ingest(JSON.parse(e.data)); } catch {} };
+  es.onerror = () => { connected = false; scheduleRender(); };
+}
+
+let renderQueued = false;
+function scheduleRender() {
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(() => { renderQueued = false; const prev = state; state = reduce(); (IS_HOST ? renderHost : renderVoter)(prev); });
+}
+
+// ══ VOTER ════════════════════════════════════════════════════
+const ui = { name: store.get('name') || '', pick: 0, confirming: false, sending: false, error: '' };
+let voterScreen = '';
+let loadTimedOut = false;
+
+function renderVoter(prev) {
+  const mine = state.votes.get(myId);
+  const screen = !connected && !messages.size && !loadTimedOut ? 'loading'
+    : state.answer ? 'reveal'
+    : mine ? 'voted'
+    : state.locked ? 'closed'
+    : 'form';
+  // The form keeps its own DOM while open so typing isn't interrupted.
+  if (screen === 'form' && voterScreen === 'form') { updateForm(); return; }
+  const changed = screen !== voterScreen || prev.round !== state.round;
+  voterScreen = screen;
+  if (!changed && screen !== 'loading') { updateSplit(); return; }
+  $app.replaceChildren(h('div', { class: 'voter' }, voterHeader(), ...({
+    loading: () => [h('p', { class: 'fine' }, 'Opening the case file…')],
+    form: voterForm,
+    voted: voterVoted,
+    closed: voterClosed,
+    reveal: voterReveal,
+  })[screen]()));
+  if (screen === 'form') updateForm();
+  if (screen === 'voted' || screen === 'reveal') updateSplit();
+}
+
+function voterHeader() {
+  return h('div', { class: 'status' },
+    h('span', { class: 'tag live' + (state.locked || state.answer ? ' red' : '') }, h('span', { class: 'dot' }),
+      state.answer ? 'Case file / verdict' : state.locked ? 'Case file / closed' : 'Case file / live vote'),
+    h('span', { class: 'conn' + (connected ? ' ok' : ''), id: 'conn' }, connected ? '● live' : '○ connecting'));
+}
+
+function voterForm() {
+  const input = h('input', { class: 'name', id: 'name', maxlength: '24', autocomplete: 'given-name', placeholder: 'e.g. Sam', value: ui.name,
+    oninput: (e) => { ui.name = e.target.value; ui.confirming = false; store.set('name', ui.name); updateForm(); } });
+  return [
+    h('h1', { class: 'rise' }, 'Which story is ', h('em', {}, 'the lie?')),
+    h('p', { class: 'lede' }, 'Two of these happened. One did not. Pick the one you think Kay made up.'),
+    h('label', { class: 'label', for: 'name' }, 'Your name'),
+    input,
+    h('p', { class: 'label' }, 'Your suspect'),
+    h('div', { class: 'cases', role: 'group', 'aria-label': 'Cases' },
+      CASES.map((c, i) => h('button', { class: 'case', 'data-p': i + 1, 'aria-pressed': 'false',
+        onclick: () => { ui.pick = i + 1; ui.confirming = false; updateForm(); } },
+        h('span', { class: 'n' }, c.n),
+        h('span', {}, h('div', { class: 't' }, c.t), h('div', { class: 's' }, c.s)),
+        h('span', { class: 'pick' }, 'PICK')))),
+    h('button', { class: 'submit', id: 'submit', onclick: submitVote }),
+    h('p', { class: 'fine', id: 'fine' }),
+  ];
+}
+
+function updateForm() {
+  const btn = document.getElementById('submit');
+  if (!btn) return;
+  document.querySelectorAll('.case').forEach((b) => {
+    const on = Number(b.dataset.p) === ui.pick;
+    b.setAttribute('aria-pressed', on); b.querySelector('.pick').textContent = on ? 'SUSPECT' : 'PICK';
+  });
+  const ready = ui.name.trim() && ui.pick;
+  btn.disabled = !ready || ui.sending;
+  btn.classList.toggle('confirm', ui.confirming);
+  btn.textContent = ui.sending ? 'Locking it in…'
+    : ui.confirming ? `Tap again: Case ${CASES[ui.pick - 1].n} is the lie`
+    : !ui.name.trim() ? 'Add your name first'
+    : !ui.pick ? 'Pick a suspect'
+    : 'Lock in my vote';
+  document.getElementById('fine').textContent = ui.error || `No take-backs. ${state.total} ${state.total === 1 ? 'vote' : 'votes'} in so far.`;
+  const conn = document.getElementById('conn');
+  if (conn) { conn.className = 'conn' + (connected ? ' ok' : ''); conn.textContent = connected ? '● live' : '○ connecting'; }
+}
+
+async function submitVote() {
+  if (!ui.name.trim() || !ui.pick || ui.sending) return;
+  if (!ui.confirming) { ui.confirming = true; updateForm(); return; }
+  ui.sending = true; ui.error = ''; updateForm();
+  const ok = await send({ t: 'vote', r: state.round, v: myId, n: cleanName(ui.name), p: ui.pick });
+  ui.sending = false; ui.confirming = false;
+  if (!ok) { ui.error = 'That didn’t go through. Check your signal and tap again.'; updateForm(); }
+}
+
+function splitRows(highlight, lie) {
+  return h('div', { class: 'split', id: 'split' }, CASES.map((c, i) =>
+    h('div', { class: 'split-row' + (highlight === i + 1 ? ' mine' : '') + (lie === i + 1 ? ' lie' : '') },
+      h('div', { class: 'top' }, h('span', {}, `${c.n}  ${c.t}`), h('span', { class: 'pct', 'data-pct': i })),
+      h('div', { class: 'bar-track' }, h('div', { class: 'bar-fill', 'data-bar': i })))));
+}
+
+function updateSplit() {
+  document.querySelectorAll('[data-pct]').forEach((el) => {
+    const i = Number(el.dataset.pct); el.textContent = `${pct(state.counts[i], state.total)}%`;
+  });
+  requestAnimationFrame(() => document.querySelectorAll('[data-bar]').forEach((el) => {
+    el.style.width = pct(state.counts[Number(el.dataset.bar)], state.total) + '%';
+  }));
+  const mine = state.votes.get(myId);
+  const agree = document.getElementById('agree');
+  if (mine && agree) {
+    const others = state.counts[mine.p - 1] - 1;
+    agree.textContent = state.total <= 1 ? 'You’re the first detective in. Watch the room catch up.'
+      : others === 0 ? 'Lone wolf. Nobody else agrees with you (yet).'
+      : `You’re with ${pct(state.counts[mine.p - 1], state.total)}% of the room.`;
+  }
+  const tot = document.getElementById('tot');
+  if (tot) tot.textContent = `${state.total} ${state.total === 1 ? 'vote' : 'votes'} in`;
+}
+
+function voterVoted() {
+  const mine = state.votes.get(myId);
+  const c = CASES[mine.p - 1];
+  return [
+    h('div', { class: 'center' }, h('div', { class: 'stamp slam big-stamp', style: 'color:var(--lime)' }, 'Vote locked')),
+    h('p', { class: 'lede center', style: 'margin-top:14px' }, `${mine.name}, you think `, h('b', {}, `Case ${c.n}: ${c.t}`), ' is the lie.'),
+    h('div', { class: 'panel' },
+      h('div', { class: 'status' }, h('p', { class: 'label', style: 'margin:0' }, 'What the room thinks'), h('span', { class: 'conn ok', id: 'tot' })),
+      splitRows(mine.p),
+      h('p', { class: 'fine', id: 'agree', style: 'text-align:left' })),
+    h('p', { class: 'fine' }, 'Eyes on the big screen. The truth is coming.'),
+  ];
+}
+
+function voterClosed() {
+  return [
+    h('div', { class: 'center' }, h('div', { class: 'stamp slam big-stamp', style: 'color:var(--red)' }, 'Votes locked')),
+    h('p', { class: 'lede center', style: 'margin-top:18px' }, 'Voting is closed. You snooze, you lose.'),
+    h('p', { class: 'fine' }, 'Watch the big screen for the reveal.'),
+  ];
+}
+
+function voterReveal() {
+  const mine = state.votes.get(myId);
+  const lie = CASES[state.answer - 1];
+  const right = state.counts[state.answer - 1];
+  const good = mine && mine.p === state.answer;
+  return [
+    h('p', { class: 'verdict rise ' + (mine ? (good ? 'good' : 'bad') : '') },
+      mine ? (good ? 'You cracked it.' : 'Fooled you.') : 'The truth is out.'),
+    h('p', { class: 'lede' }, 'The lie was ', h('b', { style: 'color:var(--red)' }, `Case ${lie.n}: ${lie.t}`),
+      `. ${right} of ${state.total} ${state.total === 1 ? 'detective' : 'detectives'} got it right.`),
+    h('div', { class: 'center' }, h('div', { class: 'stamp slam', style: 'color:var(--red);margin:6px 0 8px' }, 'Fabricated')),
+    h('div', { class: 'panel' }, h('p', { class: 'label', style: 'margin:0' }, 'Final votes'), splitRows(mine?.p, state.answer)),
+  ];
+}
+
+// ══ HOST ═════════════════════════════════════════════════════
+let hostBuilt = false, revealArm = false, showNames = store.get('names') !== 'off', lastRound = null, lastAnswer = 0;
+const seenVoters = new Set();
+
+function buildHost() {
+  hostBuilt = true;
+  $app.replaceChildren(h('div', { class: 'host' },
+    h('header', {},
+      h('span', { class: 'tag live', id: 'h-tag' }, h('span', { class: 'dot' }), h('span', { id: 'h-tagtext' }, 'Case file / live results')),
+      h('span', { class: 'conn', id: 'conn' })),
+    h('section', { class: 'left' },
+      h('h1', { id: 'h-title' }, 'Pin ', h('br'), h('em', {}, 'the lie.')),
+      h('p', { class: 'sub', id: 'h-sub' }),
+      h('div', { class: 'join', id: 'h-join' },
+        h('div', { class: 'qr', id: 'qr', 'aria-label': 'QR code for the voting page' }),
+        h('div', {}, h('div', { class: 'how' }, 'Scan to vote'), h('div', { class: 'url' }, VOTER_URL.replace(/^https?:\/\//, '')))),
+      h('div', { class: 'total' },
+        h('div', { class: 'num', id: 'h-total' }, '0'),
+        h('div', { class: 'cap', id: 'h-cap' }, 'votes in'),
+        h('div', { class: 'feed', id: 'h-feed' }))),
+    h('section', { class: 'rows' }, CASES.map((c, i) =>
+      h('div', { class: 'row', id: 'row' + i },
+        h('div', { class: 'n' }, c.n),
+        h('div', {},
+          h('div', { class: 't' }, h('span', {}, c.t), h('span', { class: 'count', id: 'count' + i })),
+          h('div', { class: 'bar-track' }, h('div', { class: 'bar-fill', id: 'bar' + i })),
+          h('div', { class: 'chips', id: 'chips' + i })),
+        h('div', { class: 'row-stamp stamp hidden', id: 'stamp' + i })))),
+    h('footer', {},
+      h('button', { class: 'ctl primary', id: 'b-lock', onclick: lockWithCountdown }, 'Lock votes (3-2-1)'),
+      h('button', { class: 'ctl', id: 'b-unlock', onclick: () => send({ t: 'unlock', r: state.round }) }, 'Reopen voting'),
+      h('button', { class: 'ctl', id: 'b-reveal', onclick: () => { revealArm = !revealArm; renderHost(state); } }, 'Reveal the lie…'),
+      ...CASES.map((c, i) => h('button', { class: 'ctl pick hidden', 'data-reveal': i + 1,
+        onclick: () => { revealArm = false; send({ t: 'reveal', r: state.round, a: i + 1 }); } }, `Case ${c.n} is the lie`)),
+      h('span', { class: 'spacer' }),
+      h('button', { class: 'ctl', id: 'b-names', onclick: () => { showNames = !showNames; store.set('names', showNames ? 'on' : 'off'); renderHost(state); } }),
+      h('button', { class: 'ctl', onclick: copyLink, id: 'b-copy' }, 'Copy voter link'),
+      h('button', { class: 'ctl danger', onclick: resetRound }, 'New round'))));
+  try {
+    new QRCode(document.getElementById('qr'), { text: VOTER_URL, width: 400, height: 400, colorDark: '#0B0D12', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  } catch { document.getElementById('qr').classList.add('hidden'); }
+}
+
+function renderHost(prev) {
+  if (!hostBuilt) buildHost();
+  const S = state;
+  if (lastRound !== S.round) { seenVoters.clear(); lastRound = S.round; }
+  const conn = document.getElementById('conn');
+  conn.className = 'conn' + (connected ? ' ok' : ''); conn.textContent = connected ? '● live' : '○ connecting…';
+
+  const tag = document.getElementById('h-tag');
+  tag.classList.toggle('red', Boolean(S.locked || S.answer));
+  document.getElementById('h-tagtext').textContent = S.answer ? 'Case file / verdict' : S.locked ? 'Case file / votes locked' : 'Case file / live results';
+  const right = S.answer ? S.counts[S.answer - 1] : 0;
+  document.getElementById('h-sub').textContent = S.answer
+    ? `${right} of ${S.total} ${S.total === 1 ? 'detective' : 'detectives'} cracked it. Everyone else: fooled.`
+    : S.locked ? 'Votes are locked. No take-backs. Time for the truth.'
+    : 'Two truths. One lie. Scan the code, add your name and pick your suspect.';
+  document.getElementById('h-join').classList.toggle('hidden', Boolean(S.answer));
+  const title = document.getElementById('h-title');
+  if (title.dataset.mode !== String(Boolean(S.answer))) {
+    title.dataset.mode = String(Boolean(S.answer));
+    title.replaceChildren(...(S.answer ? ['Case', h('br'), h('em', { style: 'color:var(--red)' }, 'closed.')] : ['Pin ', h('br'), h('em', {}, 'the lie.')]));
+  }
+  document.getElementById('h-total').textContent = S.answer ? `${pct(right, S.total)}%` : S.total;
+  document.getElementById('h-cap').textContent = S.answer ? 'of the room got it right' : S.total === 1 ? 'vote in' : 'votes in';
+
+  const latest = S.order.slice(-3).reverse().map((id) => S.votes.get(id).name);
+  const feed = document.getElementById('h-feed');
+  feed.replaceChildren(...(latest.length && !S.answer ? ['Latest: ', ...latest.flatMap((n, i) => [i ? ', ' : '', h('b', {}, n)])] : []));
+
+  CASES.forEach((c, i) => {
+    const row = document.getElementById('row' + i);
+    const isLie = S.answer === i + 1;
+    row.classList.toggle('lie', isLie);
+    row.classList.toggle('true', Boolean(S.answer) && !isLie);
+    document.getElementById('count' + i).replaceChildren(h('b', {}, S.counts[i]), `  ${pct(S.counts[i], S.total)}%`);
+    document.getElementById('bar' + i).style.width = pct(S.counts[i], S.total) + '%';
+    const stamp = document.getElementById('stamp' + i);
+    stamp.classList.toggle('hidden', !S.answer);
+    if (S.answer && lastAnswer !== S.answer) { stamp.textContent = isLie ? 'Lie' : 'True'; stamp.classList.remove('slam'); void stamp.offsetWidth; stamp.classList.add('slam'); }
+    const chips = document.getElementById('chips' + i);
+    const names = S.order.filter((id) => S.votes.get(id).p === i + 1);
+    if (!showNames) { chips.replaceChildren(); return; }
+    const shown = names.slice(-14);
+    chips.replaceChildren(...shown.map((id) => {
+      const chip = h('span', { class: 'chip' }, S.votes.get(id).name);
+      if (seenVoters.has(id)) chip.style.animation = 'none';
+      return chip;
+    }), ...(names.length > shown.length ? [h('span', { class: 'chip more' }, `+${names.length - shown.length} more`)] : []));
+  });
+  S.order.forEach((id) => seenVoters.add(id));
+
+  document.getElementById('b-lock').classList.toggle('hidden', Boolean(S.locked));
+  document.getElementById('b-unlock').classList.toggle('hidden', !S.locked || Boolean(S.answer));
+  document.getElementById('b-reveal').classList.toggle('hidden', Boolean(S.answer));
+  document.querySelectorAll('[data-reveal]').forEach((b) => b.classList.toggle('hidden', !revealArm || Boolean(S.answer)));
+  document.getElementById('b-names').textContent = showNames ? 'Hide names' : 'Show names';
+
+  if (S.answer && lastAnswer !== S.answer && prev && prev.round === S.round) confetti();
+  lastAnswer = S.answer;
+}
+
+async function lockWithCountdown() {
+  const ov = h('div', { class: 'overlay' });
+  document.body.append(ov);
+  for (const n of ['3', '2', '1']) { ov.replaceChildren(h('div', { class: 'count-num' }, n)); await sleep(900); }
+  ov.replaceChildren(h('div', { class: 'stamp slam' }, 'Votes locked'));
+  send({ t: 'lock', r: state.round });
+  await sleep(1600);
+  ov.remove();
+}
+
+function resetRound() {
+  if (!confirm('Start a new round? This clears every vote on the big screen and on phones.')) return;
+  revealArm = false;
+  send({ t: 'reset', r: 'r' + Date.now().toString(36) });
+}
+
+async function copyLink() {
+  const b = document.getElementById('b-copy');
+  try { await navigator.clipboard.writeText(VOTER_URL); b.textContent = 'Copied'; } catch { b.textContent = VOTER_URL; }
+  setTimeout(() => { b.textContent = 'Copy voter link'; }, 2000);
+}
+
+function confetti() {
+  const colors = ['#C9FF3D', '#F2EEE6', '#FF4B3E'];
+  for (let i = 0; i < 90; i++) {
+    const p = h('span', { class: 'confetti' });
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.background = colors[i % 3];
+    p.style.animationDuration = 2.2 + Math.random() * 2 + 's';
+    p.style.animationDelay = Math.random() * .6 + 's';
+    document.body.append(p);
+    setTimeout(() => p.remove(), 5200);
+  }
+}
+
+// ── go ────────────────────────────────────────────────────────
+window.addEventListener('hashchange', () => location.reload());
+if (IS_HOST) document.title = "Kay's Case File · Live Results";
+(IS_HOST ? renderHost : renderVoter)(state);
+connect();
+// If the relay is slow to answer, show the form anyway so nobody is stuck on a spinner.
+setTimeout(() => { loadTimedOut = true; if (!IS_HOST) scheduleRender(); }, 4000);
+</script>
+</body>
+</html>
