@@ -40,7 +40,8 @@ input { font: inherit; }
 .hidden { display: none !important; }
 
 /* ── voter (phone) ─────────────────────────────────────────── */
-.voter { max-width: 520px; margin: 0 auto; padding: 22px 18px 40px; }
+.voter { max-width: 520px; margin: 0 auto; padding: 22px 18px 40px; overflow-x: hidden; overflow-x: clip; }
+body { overflow-x: hidden; }
 .voter h1 { font-weight: 900; font-size: clamp(38px, 11vw, 54px); line-height: .95; letter-spacing: -.01em; margin: 20px 0 12px; }
 .voter h1 em { font-style: normal; color: var(--lime); }
 .voter .lede { color: var(--mist); font: 400 16px/1.45 var(--head); margin-bottom: 22px; }
@@ -115,8 +116,35 @@ input { font: inherit; }
 .count-num { font: 900 min(52vh, 40vw)/1 var(--head); color: var(--lime); animation: punch .9s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes punch { from { transform: scale(1.6); opacity: 0; } 25% { opacity: 1; } 80% { transform: scale(1); opacity: 1; } to { opacity: 0; } }
 .overlay .stamp { font-size: min(12vh, 9vw); color: var(--red); }
-.confetti { position: fixed; top: -20px; width: 10px; height: 16px; z-index: 20; pointer-events: none; animation: fall linear forwards; }
+.confetti { position: absolute; top: -20px; width: 10px; height: 16px; z-index: 20; pointer-events: none; animation: fall linear forwards; }
 @keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
+.conf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+.cbtn { background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 12px 6px; display: grid; gap: 6px; justify-items: center;
+  font: 700 13px/1.15 var(--head); color: var(--mist); text-align: center; }
+.cbtn .ce { font-size: 26px; line-height: 1; }
+.cbtn[aria-pressed="true"] { border-color: var(--lime); background: #1b2211; color: var(--paper); }
+.react { margin-top: 18px; }
+.react-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.rbtn { font-size: 30px; line-height: 1; padding: 12px 0; background: var(--card); border: 2px solid var(--line); border-radius: 12px; transition: transform .08s; }
+.rbtn:active { transform: scale(.9); background: var(--card-2); }
+.react .fine { margin-top: 8px; }
+.float { position: absolute; bottom: -60px; pointer-events: none; font-size: clamp(30px, 3.2vw, 56px); line-height: 1;
+  animation: floatUp var(--dur, 4s) cubic-bezier(.2,.6,.3,1) forwards; }
+@keyframes floatUp { 0% { transform: translate(0, 0) scale(.6); opacity: 0; } 12% { opacity: 1; transform: translate(0, -12vh) scale(1); }
+  100% { transform: translate(var(--sway, 20px), -105vh) scale(1.1); opacity: 0; } }
+.voter .float { font-size: 34px; }
+.awards { display: grid; gap: 1.4vh; margin-top: 1vh; }
+.award { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 1.4vh 1.2vw; display: grid; grid-template-columns: auto 1fr; gap: 0 1vw; align-items: center;
+  opacity: 0; animation: rise .55s cubic-bezier(.2,.8,.2,1) forwards; }
+.award .icon { font-size: clamp(30px, 3vw, 52px); line-height: 1; }
+.award .what { font: 700 clamp(11px, .9vw, 15px)/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.award .who { font: 900 clamp(22px, 2.3vw, 40px)/1.05 var(--head); margin: .3vh 0; overflow-wrap: anywhere; }
+.award .why { font: 400 clamp(13px, 1.05vw, 18px)/1.3 var(--head); color: var(--mist); }
+.award.gold { border-color: #E8C547; } .award.gold .what { color: #E8C547; }
+.award.bad { border-color: #5a2522; } .award.bad .what { color: var(--red); }
+.chips .chip.chief { background: #E8C547; color: var(--ink); }
+.chips .chip.mcw { background: var(--red); color: var(--ink); }
+.fx-layer { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 15; }
 @media (max-width: 860px) {
   .host { height: auto; display: block; padding: 20px 16px; }
   .host .rows { margin-top: 28px; }
@@ -143,6 +171,8 @@ const CASES = [
   { n: '02', t: 'The stairwell', s: 'A phone, a stairwell and a lot of confidence.' },
   { n: '03', t: 'The birthday bet', s: 'Rock Paper Scissors decided. I jumped.' },
 ];
+const CONF = [['\u{1F914}', 'Just a hunch'], ['\u{1F9D0}', 'Pretty sure'], ['\u{1F96A}', 'I\u2019d bet my lunch']];
+const EMOJI = ['\u{1F602}', '\u{1F914}', '\u{1F6A8}', '\u{1F644}', '\u{1F631}'];
 const IS_HOST = /\/results(\/|\/index\.html)?$/.test(location.pathname);
 const LIE = IS_HOST ? Number(window.CASE_LIE) || 0 : 0;
 const VOTER_URL = location.origin + location.pathname.replace(/results(\/|\/index\.html)?$/, '');
@@ -171,7 +201,9 @@ if (!myId) { myId = Math.random().toString(36).slice(2, 12); store.set('id', myI
 
 // ── shared state: every message is replayed and reduced into one state ──
 const messages = new Map();
-let arrival = 0;
+const seenReacts = new Set();
+const LOADED_AT = Date.now() / 1000;
+let arrival = 0, lastTime = 0;
 let state = reduce();
 let connected = false;
 
@@ -179,7 +211,15 @@ function ingest(m) {
   if (!m || m.event !== 'message' || messages.has(m.id)) return;
   let d; try { d = JSON.parse(m.message); } catch { return; }
   if (!d || typeof d !== 'object') return;
+  if (d.t === 'react') {
+    // Reactions are moments, not state: only float the ones sent since this page opened.
+    if (seenReacts.has(m.id)) return;
+    seenReacts.add(m.id);
+    if (IS_HOST && m.time >= LOADED_AT - 3 && d.r === state.round) floatReactions(d.e);
+    return;
+  }
   messages.set(m.id, { time: m.time, seq: arrival++, d });
+  lastTime = Math.max(lastTime, m.time || 0);
   scheduleRender();
 }
 
@@ -193,7 +233,8 @@ function reduce() {
     if (d.t === 'vote') {
       const p = Number(d.p);
       if (S.locked || S.answer || ![1, 2, 3].includes(p) || typeof d.v !== 'string' || S.votes.has(d.v)) continue;
-      S.votes.set(d.v, { p, name: cleanName(d.n), time });
+      const c = Number(d.c);
+      S.votes.set(d.v, { p, c: [1, 2, 3].includes(c) ? c : 0, name: cleanName(d.n), time });
       S.order.push(d.v);
     } else if (d.t === 'lock') S.locked = true;
     else if (d.t === 'unlock' && !S.answer) S.locked = false;
@@ -217,6 +258,12 @@ async function send(d) {
   return false;
 }
 
+// Host commands show on the tally screen at once, then go to the relay (a slow relay never stalls the show).
+function command(d) {
+  ingest({ id: 'local-' + Math.random().toString(36).slice(2), time: lastTime, event: 'message', message: JSON.stringify(d) });
+  return send(d);
+}
+
 function connect() {
   const es = new EventSource(RELAY + '/sse?since=all');
   es.addEventListener('open', () => { connected = true; scheduleRender(); });
@@ -232,7 +279,7 @@ function scheduleRender() {
 }
 
 // ══ VOTER ════════════════════════════════════════════════════
-const ui = { name: store.get('name') || '', pick: 0, confirming: false, sending: false, error: '' };
+const ui = { name: store.get('name') || '', pick: 0, conf: 0, confirming: false, sending: false, error: '' };
 let voterScreen = '';
 let loadTimedOut = false;
 
@@ -278,6 +325,10 @@ function voterForm() {
         h('span', { class: 'n' }, c.n),
         h('span', {}, h('div', { class: 't' }, c.t), h('div', { class: 's' }, c.s)),
         h('span', { class: 'pick' }, 'PICK')))),
+    h('p', { class: 'label' }, 'How sure are you?'),
+    h('div', { class: 'conf', role: 'group', 'aria-label': 'How sure are you?' },
+      CONF.map(([e, t], i) => h('button', { class: 'cbtn', 'data-c': i + 1, 'aria-pressed': 'false',
+        onclick: () => { ui.conf = i + 1; ui.confirming = false; updateForm(); } }, h('span', { class: 'ce' }, e), h('span', {}, t)))),
     h('button', { class: 'submit', id: 'submit', onclick: submitVote }),
     h('p', { class: 'fine', id: 'fine' }),
   ];
@@ -290,13 +341,15 @@ function updateForm() {
     const on = Number(b.dataset.p) === ui.pick;
     b.setAttribute('aria-pressed', on); b.querySelector('.pick').textContent = on ? 'SUSPECT' : 'PICK';
   });
-  const ready = ui.name.trim() && ui.pick;
+  document.querySelectorAll('.cbtn').forEach((b) => b.setAttribute('aria-pressed', Number(b.dataset.c) === ui.conf));
+  const ready = ui.name.trim() && ui.pick && ui.conf;
   btn.disabled = !ready || ui.sending;
   btn.classList.toggle('confirm', ui.confirming);
   btn.textContent = ui.sending ? 'Locking it in…'
     : ui.confirming ? `Tap again: Case ${CASES[ui.pick - 1].n} is the lie`
     : !ui.name.trim() ? 'Add your name first'
     : !ui.pick ? 'Pick a suspect'
+    : !ui.conf ? 'How sure are you?'
     : 'Lock in my vote';
   document.getElementById('fine').textContent = ui.error || 'No take-backs. Your vote goes straight to the big screen.';
   const conn = document.getElementById('conn');
@@ -304,10 +357,10 @@ function updateForm() {
 }
 
 async function submitVote() {
-  if (!ui.name.trim() || !ui.pick || ui.sending) return;
+  if (!ui.name.trim() || !ui.pick || !ui.conf || ui.sending) return;
   if (!ui.confirming) { ui.confirming = true; updateForm(); return; }
   ui.sending = true; ui.error = ''; updateForm();
-  const ok = await send({ t: 'vote', r: state.round, v: myId, n: cleanName(ui.name), p: ui.pick });
+  const ok = await send({ t: 'vote', r: state.round, v: myId, n: cleanName(ui.name), p: ui.pick, c: ui.conf });
   ui.sending = false; ui.confirming = false;
   if (!ok) { ui.error = 'That didn’t go through. Check your signal and tap again.'; updateForm(); }
 }
@@ -321,20 +374,124 @@ function voterVoted() {
     h('div', { class: 'panel center' },
       h('p', { class: 'label', style: 'margin:0 0 10px' }, 'Your suspect'),
       h('div', { style: 'font:900 44px/1 var(--head);color:var(--lime)' }, c.n),
-      h('div', { style: 'font:800 20px/1.2 var(--head);margin-top:6px' }, c.t)),
+      h('div', { style: 'font:800 20px/1.2 var(--head);margin-top:6px' }, c.t),
+      mine.c ? h('div', { class: 'fine', style: 'margin-top:10px' }, `${CONF[mine.c - 1][0]} ${CONF[mine.c - 1][1]}`) : null),
+    reactBar(),
     h('p', { class: 'fine' }, 'Eyes on the big screen. The truth is coming.'),
   ];
+}
+
+// ── reactions: taps are bundled so a busy room can't swamp the relay ──
+const REACT_GAP = 4000, REACT_MAX_SENDS = 15;
+const pendingReacts = {};
+let reactTimer = null, lastReactSend = 0, reactSends = 0, reactRound = null;
+
+function reactBar() {
+  return h('div', { class: 'react' },
+    h('p', { class: 'label' }, 'React on the big screen'),
+    h('div', { class: 'react-row' }, EMOJI.map((e) => h('button', { class: 'rbtn', 'aria-label': 'React ' + e, onclick: () => tapReact(e) }, e))),
+    h('p', { class: 'fine', id: 'react-note' }));
+}
+
+function tapReact(e) {
+  if (reactRound !== state.round) { reactRound = state.round; reactSends = 0; }
+  floatOne(e, 10 + Math.random() * 80);
+  if (reactSends >= REACT_MAX_SENDS) { const n = document.getElementById('react-note'); if (n) n.textContent = 'Easy, tiger. The big screen has heard you.'; return; }
+  pendingReacts[e] = Math.min((pendingReacts[e] || 0) + 1, 5);
+  if (!reactTimer) reactTimer = setTimeout(flushReacts, Math.max(0, lastReactSend + REACT_GAP - Date.now()));
+}
+
+function flushReacts() {
+  reactTimer = null;
+  const e = { ...pendingReacts };
+  for (const k of Object.keys(pendingReacts)) delete pendingReacts[k];
+  if (!Object.keys(e).length) return;
+  lastReactSend = Date.now(); reactSends++;
+  // One attempt only: reactions are nice-to-have and must never queue up behind votes.
+  fetch(RELAY, { method: 'POST', body: JSON.stringify({ t: 'react', r: state.round, e }) }).catch(() => {});
+}
+
+// Floating emoji and confetti live in one clipped layer so they can never widen the page.
+function fxLayer() {
+  let l = document.getElementById('fx');
+  if (!l) { l = h('div', { class: 'fx-layer', id: 'fx', 'aria-hidden': 'true' }); document.body.append(l); }
+  return l;
+}
+
+function floatOne(e, leftVw, delay = 0) {
+  if (document.querySelectorAll('.float').length > 45) return;
+  const f = h('span', { class: 'float', 'aria-hidden': 'true' }, e);
+  f.style.left = leftVw + 'vw';
+  f.style.setProperty('--sway', (Math.random() * 60 - 30).toFixed(0) + 'px');
+  f.style.setProperty('--dur', (3.4 + Math.random() * 1.6).toFixed(2) + 's');
+  f.style.animationDelay = delay + 'ms';
+  fxLayer().append(f);
+  setTimeout(() => f.remove(), 5400 + delay);
+}
+
+function floatReactions(e) {
+  if (!e || typeof e !== 'object') return;
+  let shown = 0;
+  for (const [emoji, n] of Object.entries(e)) {
+    if (!EMOJI.includes(emoji)) continue;
+    const count = Math.min(Math.max(Number(n) || 0, 0), 5);
+    for (let i = 0; i < count && shown < 8; i++, shown++) floatOne(emoji, 62 + Math.random() * 34, i * 180);
+  }
 }
 
 function voterClosed() {
   return [
     h('div', { class: 'center' }, h('div', { class: 'stamp slam big-stamp', style: 'color:var(--red)' }, 'Votes locked')),
     h('p', { class: 'lede center', style: 'margin-top:18px' }, 'Voting is closed. You snooze, you lose.'),
+    reactBar(),
     h('p', { class: 'fine' }, 'Watch the big screen for the reveal.'),
   ];
 }
 
 // ══ HOST ═════════════════════════════════════════════════════
+// Sound effects are synthesised in the page; browsers allow audio after the first click on the page.
+const sfx = (() => {
+  let ctx = null, on = store.get('sound') !== 'off';
+  const unlock = () => {
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return; } }
+    if (ctx.state === 'suspended') ctx.resume();
+  };
+  addEventListener('pointerdown', unlock); addEventListener('keydown', unlock);
+  function tone({ f = 440, f2 = 0, type = 'sine', dur = .2, vol = .2, at = 0, lp = 0 }) {
+    if (!on || !ctx) return;
+    const t = ctx.currentTime + at, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    let node = o.connect(g);
+    if (lp) { const fl = ctx.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = lp; node = node.connect(fl); }
+    node.connect(ctx.destination); o.start(t); o.stop(t + dur + .05);
+  }
+  function noise({ dur = .15, vol = .3, at = 0, lp = 700 }) {
+    if (!on || !ctx) return;
+    const t = ctx.currentTime + at, buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate), data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length) ** 2;
+    const src = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = buf; fl.type = 'lowpass'; fl.frequency.value = lp; g.gain.value = vol;
+    src.connect(fl).connect(g).connect(ctx.destination); src.start(t);
+  }
+  return {
+    get on() { return on; },
+    toggle() { on = !on; store.set('sound', on ? 'on' : 'off'); unlock(); if (on) this.blip(); },
+    tick() { tone({ f: 1500, type: 'square', dur: .045, vol: .09, lp: 4000 }); tone({ f: 1000, type: 'square', dur: .04, vol: .06, at: .45, lp: 4000 }); },
+    thud(at = 0) { tone({ f: 150, f2: 42, dur: .38, vol: .7, at }); noise({ dur: .14, vol: .45, at, lp: 900 }); },
+    blip() { tone({ f: 880, f2: 1320, type: 'triangle', dur: .13, vol: .08 }); },
+    sting() {
+      const note = (f, at, dur) => { tone({ f, type: 'sawtooth', dur, vol: .16, at, lp: 1400 }); tone({ f: f / 2, type: 'sawtooth', dur, vol: .14, at, lp: 900 }); };
+      note(220, 0, .3); note(208, .36, .3); note(165, .74, 1.5);
+    },
+    fanfare(at = 0) { [523, 659, 784, 1047].forEach((f, i) => tone({ f, type: 'triangle', dur: .22 + (i === 3 ? .4 : 0), vol: .12, at: at + i * .11 })); },
+    womp(at = 0) { [311, 294, 277, 220].forEach((f, i) => tone({ f, f2: i === 3 ? 180 : 0, type: 'sawtooth', dur: i === 3 ? .7 : .28, vol: .1, at: at + i * .3, lp: 1100 })); },
+  };
+})();
+
+let hostSettled = false;
+setTimeout(() => { hostSettled = true; }, 2500);
 let hostBuilt = false, showNames = store.get('names') !== 'off', lastRound = null, lastAnswer = 0;
 const seenVoters = new Set();
 
@@ -350,6 +507,7 @@ function buildHost() {
       h('div', { class: 'join', id: 'h-join' },
         h('div', { class: 'qr', id: 'qr', 'aria-label': 'QR code for the voting page' }),
         h('div', {}, h('div', { class: 'how' }, 'Scan to vote'), h('div', { class: 'url' }, VOTER_URL.replace(/^https?:\/\//, '')))),
+      h('div', { class: 'awards hidden', id: 'h-awards' }),
       h('div', { class: 'total' },
         h('div', { class: 'cap', id: 'h-cap' }, 'votes in'),
         h('div', { class: 'feed', id: 'h-feed' }))),
@@ -363,9 +521,10 @@ function buildHost() {
         h('div', { class: 'row-stamp stamp hidden', id: 'stamp' + i })))),
     h('footer', {},
       h('button', { class: 'ctl primary', id: 'b-lock', onclick: lockWithCountdown }, 'Lock votes (3-2-1)'),
-      h('button', { class: 'ctl', id: 'b-unlock', onclick: () => send({ t: 'unlock', r: state.round }) }, 'Reopen voting'),
-      h('button', { class: 'ctl reveal', id: 'b-reveal', onclick: () => LIE && send({ t: 'reveal', r: state.round, a: LIE }) }, 'Reveal the lie'),
+      h('button', { class: 'ctl', id: 'b-unlock', onclick: () => command({ t: 'unlock', r: state.round }) }, 'Reopen voting'),
+      h('button', { class: 'ctl reveal', id: 'b-reveal', onclick: () => LIE && command({ t: 'reveal', r: state.round, a: LIE }) }, 'Reveal the lie'),
       h('span', { class: 'spacer' }),
+      h('button', { class: 'ctl', id: 'b-sound', onclick: () => { sfx.toggle(); renderHost(state); } }),
       h('button', { class: 'ctl', id: 'b-names', onclick: () => { showNames = !showNames; store.set('names', showNames ? 'on' : 'off'); renderHost(state); } }),
       h('button', { class: 'ctl', onclick: copyLink, id: 'b-copy' }, 'Copy voter link'),
       h('button', { class: 'ctl danger', onclick: resetRound }, 'New round'))));
@@ -402,6 +561,11 @@ function renderHost(prev) {
   const feed = document.getElementById('h-feed');
   feed.replaceChildren(...(latest.length && !S.answer ? ['Latest: ', ...latest.flatMap((n, i) => [i ? ', ' : '', h('b', {}, n)])] : []));
 
+  const awards = S.answer ? computeAwards(S) : null;
+  const firstReveal = S.answer && lastAnswer !== S.answer && prev && prev.round === S.round;
+  // Reveal order: TRUE stamps land one by one, then LIE, then the awards.
+  const stampOrder = S.answer ? [0, 1, 2].filter((i) => i + 1 !== S.answer).concat(S.answer - 1) : [];
+  const stampDelay = (i) => (firstReveal ? 1100 + stampOrder.indexOf(i) * 750 : 0);
   CASES.forEach((c, i) => {
     const row = document.getElementById('row' + i);
     const isLie = S.answer === i + 1;
@@ -411,13 +575,19 @@ function renderHost(prev) {
     document.getElementById('bar' + i).style.width = pct(S.counts[i], S.total) + '%';
     const stamp = document.getElementById('stamp' + i);
     stamp.classList.toggle('hidden', !S.answer);
-    if (S.answer && lastAnswer !== S.answer) { stamp.textContent = isLie ? 'Lie' : 'True'; stamp.classList.remove('slam'); void stamp.offsetWidth; stamp.classList.add('slam'); }
+    if (S.answer && lastAnswer !== S.answer) {
+      stamp.textContent = isLie ? 'Lie' : 'True'; stamp.classList.remove('slam'); void stamp.offsetWidth;
+      stamp.style.animationDelay = stampDelay(i) + 'ms'; stamp.classList.add('slam');
+      if (firstReveal) sfx.thud(stampDelay(i) / 1000 + .3);
+    }
     const chips = document.getElementById('chips' + i);
     const names = S.order.filter((id) => S.votes.get(id).p === i + 1);
     if (!showNames) { chips.replaceChildren(); return; }
     const shown = names.slice(-14);
     chips.replaceChildren(...shown.map((id) => {
-      const chip = h('span', { class: 'chip' }, S.votes.get(id).name);
+      const v = S.votes.get(id);
+      const chip = h('span', { class: 'chip' + (awards && id === awards.chief ? ' chief' : '') + (awards && id === awards.mcw ? ' mcw' : '') },
+        (awards && id === awards.chief ? '\u2605 ' : '') + v.name + (v.c === 3 ? ' \u{1F96A}' : ''));
       if (seenVoters.has(id)) chip.style.animation = 'none';
       return chip;
     }), ...(names.length > shown.length ? [h('span', { class: 'chip more' }, `+${names.length - shown.length} more`)] : []));
@@ -428,17 +598,55 @@ function renderHost(prev) {
   document.getElementById('b-unlock').classList.toggle('hidden', !S.locked || Boolean(S.answer));
   document.getElementById('b-reveal').classList.toggle('hidden', Boolean(S.answer));
   document.getElementById('b-names').textContent = showNames ? 'Hide names' : 'Show names';
+  document.getElementById('b-sound').textContent = sfx.on ? 'Sound: on' : 'Sound: off';
 
-  if (S.answer && lastAnswer !== S.answer && prev && prev.round === S.round) confetti();
+  const awardsEl = document.getElementById('h-awards');
+  awardsEl.classList.toggle('hidden', !S.answer);
+  if (S.answer && lastAnswer !== S.answer) renderAwards(awardsEl, awards, firstReveal ? 1100 + 3 * 750 + 400 : 0);
+
+  if (firstReveal) {
+    sfx.sting();
+    setTimeout(confetti, stampDelay(S.answer - 1) + 250);
+  }
+  if (!S.answer && prev && prev.round === S.round && S.total > prev.total && hostSettled) sfx.blip();
   lastAnswer = S.answer;
+}
+
+function computeAwards(S) {
+  const right = S.order.filter((id) => S.votes.get(id).p === S.answer);
+  const wrong = S.order.filter((id) => S.votes.get(id).p !== S.answer);
+  let mcw = null;
+  for (const id of wrong) if (!mcw || S.votes.get(id).c > S.votes.get(mcw).c) mcw = id;
+  return { chief: right[0] || null, mcw, lunches: wrong.filter((id) => S.votes.get(id).c === 3).length };
+}
+
+function renderAwards(el, a, delay) {
+  const S = state;
+  const chief = a.chief && S.votes.get(a.chief);
+  const mcw = a.mcw && S.votes.get(a.mcw);
+  const mcwWhy = !mcw ? 'Nobody got fooled. Impressive.'
+    : mcw.c === 3 ? `Bet their lunch on Case ${CASES[mcw.p - 1].n}.`
+    : mcw.c === 2 ? `Was \u201cpretty sure\u201d it was Case ${CASES[mcw.p - 1].n}.`
+    : `Had a hunch about Case ${CASES[mcw.p - 1].n}.`;
+  const card = (cls, icon, what, who, why, d) => {
+    const c = h('div', { class: 'award ' + cls }, h('div', { class: 'icon' }, icon),
+      h('div', {}, h('div', { class: 'what' }, what), h('div', { class: 'who' }, who), h('div', { class: 'why' }, why)));
+    c.style.animationDelay = d + 'ms';
+    return c;
+  };
+  el.replaceChildren(
+    card('gold', '\u{1F3C5}', 'Chief Inspector', chief ? chief.name : 'Nobody', chief ? 'First to crack the case.' : 'Kayleigh fooled the entire room.', delay),
+    card('bad', '\u{1F96A}', 'Most confidently wrong', mcw ? mcw.name : 'Nobody', mcwWhy + (a.lunches > 1 ? ` (${a.lunches} lunches lost in total.)` : ''), delay + 1100));
+  if (delay) { sfx.fanfare(delay / 1000); sfx.womp((delay + 1100) / 1000); }
 }
 
 async function lockWithCountdown() {
   const ov = h('div', { class: 'overlay' });
   document.body.append(ov);
-  for (const n of ['3', '2', '1']) { ov.replaceChildren(h('div', { class: 'count-num' }, n)); await sleep(900); }
+  for (const n of ['3', '2', '1']) { ov.replaceChildren(h('div', { class: 'count-num' }, n)); sfx.tick(); await sleep(900); }
   ov.replaceChildren(h('div', { class: 'stamp slam' }, 'Votes locked'));
-  send({ t: 'lock', r: state.round });
+  sfx.thud(.2);
+  command({ t: 'lock', r: state.round });
   await sleep(1600);
   ov.remove();
 }
@@ -446,6 +654,7 @@ async function lockWithCountdown() {
 function resetRound() {
   if (!confirm('Start a new round? This clears every vote on the big screen and on phones.')) return;
   send({ t: 'reset', r: 'r' + Date.now().toString(36) });
+  document.querySelectorAll('.float').forEach((f) => f.remove());
 }
 
 async function copyLink() {
@@ -462,7 +671,7 @@ function confetti() {
     p.style.background = colors[i % 3];
     p.style.animationDuration = 2.2 + Math.random() * 2 + 's';
     p.style.animationDelay = Math.random() * .6 + 's';
-    document.body.append(p);
+    fxLayer().append(p);
     setTimeout(() => p.remove(), 5200);
   }
 }
