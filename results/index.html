@@ -61,7 +61,6 @@ body { overflow-x: hidden; }
 .case[aria-pressed="true"] .pick { background: var(--lime); color: var(--ink); border-color: var(--lime); }
 .submit { width: 100%; background: var(--lime); color: var(--ink); border-radius: 12px; padding: 18px; font: 900 19px/1 var(--head); letter-spacing: .02em; }
 .submit:disabled { background: var(--card-2); color: var(--dim); cursor: not-allowed; }
-.submit.confirm { background: var(--red); color: var(--ink); }
 .fine { color: var(--dim); font: 400 13px/1.4 var(--mono); margin-top: 12px; text-align: center; }
 .panel { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 20px 18px; margin-top: 18px; }
 .center { text-align: center; }
@@ -279,7 +278,7 @@ function scheduleRender() {
 }
 
 // ══ VOTER ════════════════════════════════════════════════════
-const ui = { name: store.get('name') || '', pick: 0, conf: 0, confirming: false, sending: false, error: '' };
+const ui = { name: store.get('name') || '', pick: 0, conf: 0, sending: false, error: '' };
 let voterScreen = '';
 let loadTimedOut = false;
 
@@ -312,7 +311,7 @@ function voterHeader() {
 
 function voterForm() {
   const input = h('input', { class: 'name', id: 'name', maxlength: '24', autocomplete: 'given-name', placeholder: 'e.g. Sam', value: ui.name,
-    oninput: (e) => { ui.name = e.target.value; ui.confirming = false; store.set('name', ui.name); updateForm(); } });
+    oninput: (e) => { ui.name = e.target.value; store.set('name', ui.name); updateForm(); } });
   return [
     h('h1', { class: 'rise' }, 'Which story is ', h('em', {}, 'the lie?')),
     h('p', { class: 'lede' }, 'Two of these happened. One did not. Pick the one you think Kayleigh made up.'),
@@ -321,14 +320,14 @@ function voterForm() {
     h('p', { class: 'label' }, 'Your suspect'),
     h('div', { class: 'cases', role: 'group', 'aria-label': 'Cases' },
       CASES.map((c, i) => h('button', { class: 'case', 'data-p': i + 1, 'aria-pressed': 'false',
-        onclick: () => { ui.pick = i + 1; ui.confirming = false; updateForm(); } },
+        onclick: () => { ui.pick = i + 1; updateForm(); } },
         h('span', { class: 'n' }, c.n),
         h('span', {}, h('div', { class: 't' }, c.t), h('div', { class: 's' }, c.s)),
         h('span', { class: 'pick' }, 'PICK')))),
     h('p', { class: 'label' }, 'How sure are you?'),
     h('div', { class: 'conf', role: 'group', 'aria-label': 'How sure are you?' },
       CONF.map(([e, t], i) => h('button', { class: 'cbtn', 'data-c': i + 1, 'aria-pressed': 'false',
-        onclick: () => { ui.conf = i + 1; ui.confirming = false; updateForm(); } }, h('span', { class: 'ce' }, e), h('span', {}, t)))),
+        onclick: () => { ui.conf = i + 1; updateForm(); } }, h('span', { class: 'ce' }, e), h('span', {}, t)))),
     h('button', { class: 'submit', id: 'submit', onclick: submitVote }),
     h('p', { class: 'fine', id: 'fine' }),
   ];
@@ -344,9 +343,7 @@ function updateForm() {
   document.querySelectorAll('.cbtn').forEach((b) => b.setAttribute('aria-pressed', Number(b.dataset.c) === ui.conf));
   const ready = ui.name.trim() && ui.pick && ui.conf;
   btn.disabled = !ready || ui.sending;
-  btn.classList.toggle('confirm', ui.confirming);
   btn.textContent = ui.sending ? 'Locking it in…'
-    : ui.confirming ? `Tap again: Case ${CASES[ui.pick - 1].n} is the lie`
     : !ui.name.trim() ? 'Add your name first'
     : !ui.pick ? 'Pick a suspect'
     : !ui.conf ? 'How sure are you?'
@@ -358,10 +355,9 @@ function updateForm() {
 
 async function submitVote() {
   if (!ui.name.trim() || !ui.pick || !ui.conf || ui.sending) return;
-  if (!ui.confirming) { ui.confirming = true; updateForm(); return; }
   ui.sending = true; ui.error = ''; updateForm();
   const ok = await send({ t: 'vote', r: state.round, v: myId, n: cleanName(ui.name), p: ui.pick, c: ui.conf });
-  ui.sending = false; ui.confirming = false;
+  ui.sending = false;
   if (!ok) { ui.error = 'That didn’t go through. Check your signal and tap again.'; updateForm(); }
 }
 
