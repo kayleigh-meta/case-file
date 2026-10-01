@@ -8,7 +8,7 @@
 <title>Kay's Case File · Live Vote</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;800;900&family=Courier+Prime:wght@400;700&family=Permanent+Marker&display=swap" rel="stylesheet">
 <style>
 :root {
   --ink: #0B0D12; --card: #151922; --card-2: #1C212C; --line: #2A3040;
@@ -69,42 +69,65 @@ body { overflow-x: hidden; }
 .conn { font: 700 11px/1 var(--mono); color: var(--dim); letter-spacing: .08em; text-transform: uppercase; }
 .conn.ok { color: var(--lime); }
 
-/* ── host (big screen) ─────────────────────────────────────── */
-.host { height: 100vh; height: 100dvh; display: grid; grid-template-columns: minmax(320px, 34%) 1fr; grid-template-rows: auto 1fr auto;
-  gap: 0 4vw; padding: 3.2vh 4vw 2.4vh; overflow: hidden; }
-.host header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 3vh; }
-.host .left { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.host h1 { font: 900 clamp(44px, 6.4vw, 110px)/.9 var(--head); letter-spacing: -.015em; }
+/* ── host (big screen): an evidence board ─────────────────── */
+.host { position: relative; height: 100vh; height: 100dvh; display: grid; grid-template-columns: minmax(300px, 29%) 1fr; grid-template-rows: auto 1fr auto;
+  gap: 0 3.5vw; padding: 3vh 3.5vw 2.2vh; overflow: hidden; background: #1f1912 url('../img/cork.jpg') repeat; background-size: 384px; }
+.host::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 55% 45%, transparent 35%, rgba(0,0,0,.6) 100%); }
+.host > * { position: relative; }
+.host header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.4vh; }
+.host .left { display: flex; flex-direction: column; min-height: 0; overflow: hidden; padding-top: .6vh; }
+.host h1 { font: 900 clamp(42px, 6vw, 104px)/.9 var(--head); letter-spacing: -.015em; text-shadow: 0 3px 18px rgba(0,0,0,.6); }
 .host h1 em { font-style: normal; color: var(--lime); }
-.host .sub { color: var(--mist); font: 400 clamp(15px, 1.35vw, 22px)/1.4 var(--head); margin: 2.2vh 0 3vh; max-width: 30ch; }
-.join { display: flex; gap: 20px; align-items: center; background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 16px; }
-.qr { background: #fff; padding: 10px; border-radius: 10px; line-height: 0; flex: none; }
-.qr img, .qr canvas { width: clamp(120px, 12vw, 200px) !important; height: auto !important; }
-.join .how { font: 800 clamp(16px, 1.5vw, 24px)/1.15 var(--head); }
-.join .url { font: 700 clamp(11px, .9vw, 15px)/1.35 var(--mono); color: var(--lime); word-break: break-all; margin-top: 8px; }
-.total { margin-top: 2.4vh; }
-.total .cap { font: 700 clamp(14px, 1.3vw, 22px)/1.3 var(--mono); color: var(--lime); letter-spacing: .08em; text-transform: uppercase; }
-.feed { font: 700 clamp(12px, 1vw, 16px)/1.5 var(--mono); color: var(--dim); margin-top: 10px; min-height: 1.5em; }
+.host .sub { color: #D9D4CB; font: 400 clamp(15px, 1.3vw, 22px)/1.4 var(--head); margin: 2vh 0 3.2vh; max-width: 30ch; text-shadow: 0 2px 10px rgba(0,0,0,.7); }
+/* pinned paper notes: the QR card and the awards */
+.note { position: relative; background: var(--paper); color: var(--ink); border-radius: 3px; box-shadow: 0 10px 24px rgba(0,0,0,.55), 0 2px 4px rgba(0,0,0,.4); }
+.note::before { content: ''; position: absolute; top: -9px; left: 50%; width: 18px; height: 18px; border-radius: 50%; transform: translateX(-50%);
+  background: radial-gradient(circle at 35% 30%, #ff9a8f 0 18%, #d62c26 22% 100%); box-shadow: 0 3px 5px rgba(0,0,0,.5); }
+.join { display: flex; gap: 18px; align-items: center; padding: 16px 18px; transform: rotate(-1.3deg); }
+.qr { background: #fff; padding: 6px; line-height: 0; flex: none; }
+.qr img, .qr canvas { width: clamp(112px, 11vw, 190px) !important; height: auto !important; }
+.join .how { font: 400 clamp(20px, 1.9vw, 32px)/1.05 'Permanent Marker', var(--head); color: var(--ink); }
+.join .url { font: 700 clamp(11px, .85vw, 14px)/1.35 var(--mono); color: #3a3844; word-break: break-all; margin-top: 8px; }
+.total { margin-top: 2.6vh; }
+.total .cap { font: 700 clamp(14px, 1.3vw, 22px)/1.3 var(--mono); color: var(--lime); letter-spacing: .08em; text-transform: uppercase; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+.feed { font: 700 clamp(12px, 1vw, 16px)/1.5 var(--mono); color: #A9A39A; margin-top: 10px; min-height: 1.5em; }
 .feed b { color: var(--paper); }
-.rows { display: flex; flex-direction: column; justify-content: center; gap: 3.2vh; min-height: 0; }
-.row { position: relative; display: grid; grid-template-columns: clamp(70px, 7vw, 120px) 1fr; gap: 0 1.6vw; align-items: start; }
-.row .n { font: 900 clamp(48px, 5.4vw, 96px)/.85 var(--head); color: var(--lime); transition: color .4s; }
-.row .t { display: flex; justify-content: space-between; align-items: baseline; font: 800 clamp(18px, 1.9vw, 32px)/1 var(--head); margin-bottom: 1.1vh; }
-.row .count { font: 700 clamp(15px, 1.4vw, 24px)/1 var(--mono); color: var(--mist); white-space: nowrap; }
-.row .count b { color: var(--paper); font-size: 1.3em; }
-.row .bar-track { height: clamp(18px, 2.6vh, 34px); }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.1vh; min-height: 26px; }
-.chip { font: 700 clamp(11px, .9vw, 15px)/1 var(--mono); background: var(--card-2); color: var(--paper); border-radius: 999px; padding: 6px 10px; animation: rise .4s both; }
+/* the board: three pinned polaroids joined by red string */
+.board { position: relative; display: flex; align-items: center; min-height: 0; }
+.strings { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; overflow: visible; }
+.polaroids { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4vw; width: 100%; align-items: start; }
+.pcol { min-width: 0; }
+.polaroid { position: relative; margin: 0; background: #F4F0E8; padding: .7vw .7vw 0; box-shadow: 0 14px 28px rgba(0,0,0,.6), 0 3px 6px rgba(0,0,0,.4);
+  transform: rotate(var(--rot)); transform-origin: 50% 0; transition: transform 1.2s cubic-bezier(.3, 1.55, .45, 1) var(--swing-delay, 0ms); }
+.pin { position: absolute; z-index: 4; top: -.55vw; left: 50%; width: clamp(14px, 1.15vw, 22px); aspect-ratio: 1; border-radius: 50%; transform: translateX(-50%);
+  background: radial-gradient(circle at 35% 30%, #ff9a8f 0 18%, #d62c26 22% 100%); box-shadow: 0 3px 6px rgba(0,0,0,.55); }
+.photo { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #111; }
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter .8s; }
+.polaroid figcaption { font: 400 clamp(14px, 1.45vw, 27px)/1.2 'Permanent Marker', cursive; color: #1d1c22; text-align: center; padding: 1vh .3vw 1.3vh; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stampwrap { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.stampwrap .stamp { font-size: clamp(22px, 2.6vw, 46px); }
+.pcol .meta { display: flex; justify-content: flex-end; margin: 2.2vh 0 .9vh; }
+.pcol .count { font: 700 clamp(15px, 1.4vw, 24px)/1 var(--mono); color: #CFC9BF; white-space: nowrap; text-shadow: 0 2px 6px rgba(0,0,0,.8); }
+.pcol .count b { color: var(--paper); font-size: 1.3em; }
+.pcol .bar-track { height: clamp(14px, 2.2vh, 28px); background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.08); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 1.2vh; min-height: 26px; }
+.chip { font: 700 clamp(11px, .9vw, 15px)/1 var(--mono); background: rgba(14,16,21,.9); color: var(--paper); border-radius: 999px; padding: 6px 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4); animation: rise .4s both; }
 .chip.more { color: var(--dim); }
-.row.lie .n, .row.lie .t { color: var(--red); }
-.row.lie .bar-fill { background: var(--red); }
-.row.true .bar-fill { background: var(--dim); }
-.row.true .n { color: var(--dim); }
-.row.lie .chip { background: #3a1a18; }
-.row .row-stamp { position: absolute; left: 58%; top: -1.4vh; font-size: clamp(22px, 2.4vw, 40px); }
-.row.lie .row-stamp { color: var(--red); } .row.true .row-stamp { color: var(--lime); }
+/* the verdict */
+.pcol.lie .stamp { color: var(--red); } .pcol.true .stamp { color: var(--lime); }
+.pcol.lie .bar-fill { background: var(--red); }
+.pcol.true .bar-fill { background: var(--dim); }
+.pcol.true .photo img { filter: saturate(.55) brightness(.85); }
+.pcol.lie figcaption { color: #C2382C; }
+.pcol.lie .polaroid { transform: rotate(8deg) translate(.3vw, 1vh); transform-origin: 10% 2%; }
+.pcol .meta { transition: margin-top .9s cubic-bezier(.3, 1.55, .45, 1) var(--swing-delay, 0ms); }
+.pcol.lie .meta { margin-top: 7.5vh; }
+.pcol.lie .pin { animation: pinPop .45s cubic-bezier(.5,0,.75,0) var(--swing-delay, 0ms) forwards; }
+@keyframes pinPop { to { transform: translate(-50%, -6vh) scale(.5); opacity: 0; } }
+.pcol.lie .chip { background: #3a1a18; }
 .host footer { grid-column: 1 / -1; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding-top: 2vh; }
-.ctl { font: 700 13px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1.5px solid var(--line); border-radius: 999px; padding: 10px 14px; color: var(--mist); }
+.ctl { background: rgba(11,13,18,.82); font: 700 13px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; border: 1.5px solid var(--line); border-radius: 999px; padding: 10px 14px; color: var(--mist); }
 .ctl:hover { border-color: var(--mist); color: var(--paper); }
 .ctl.primary { border-color: var(--lime); color: var(--lime); }
 .ctl.danger { border-color: #5a2522; color: var(--red); }
@@ -132,21 +155,23 @@ body { overflow-x: hidden; }
 @keyframes floatUp { 0% { transform: translate(0, 0) scale(.6); opacity: 0; } 12% { opacity: 1; transform: translate(0, -12vh) scale(1); }
   100% { transform: translate(var(--sway, 20px), -105vh) scale(1.1); opacity: 0; } }
 .voter .float { font-size: 34px; }
-.awards { display: grid; gap: 1.4vh; margin-top: 1vh; }
-.award { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 1.4vh 1.2vw; display: grid; grid-template-columns: auto 1fr; gap: 0 1vw; align-items: center;
-  opacity: 0; animation: rise .55s cubic-bezier(.2,.8,.2,1) forwards; }
+.awards { display: grid; gap: 2.4vh; margin-top: 1.4vh; }
+.award { --r: -1.2deg; padding: 1.6vh 1.2vw 1.4vh; display: grid; grid-template-columns: auto 1fr; gap: 0 1vw; align-items: center;
+  opacity: 0; animation: noteIn .55s cubic-bezier(.2,.8,.2,1) forwards; }
+.award.bad { --r: 1.4deg; }
+@keyframes noteIn { from { opacity: 0; transform: translateY(16px) rotate(var(--r)); } to { opacity: 1; transform: rotate(var(--r)); } }
 .award .icon { font-size: clamp(30px, 3vw, 52px); line-height: 1; }
 .award .what { font: 700 clamp(11px, .9vw, 15px)/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
-.award .who { font: 900 clamp(22px, 2.3vw, 40px)/1.05 var(--head); margin: .3vh 0; overflow-wrap: anywhere; }
-.award .why { font: 400 clamp(13px, 1.05vw, 18px)/1.3 var(--head); color: var(--mist); }
-.award.gold { border-color: #E8C547; } .award.gold .what { color: #E8C547; }
-.award.bad { border-color: #5a2522; } .award.bad .what { color: var(--red); }
+.award .who { font: 400 clamp(24px, 2.4vw, 42px)/1.05 'Permanent Marker', var(--head); margin: .4vh 0; overflow-wrap: anywhere; color: var(--ink); }
+.award .why { font: 400 clamp(13px, 1.05vw, 18px)/1.3 var(--head); color: #4A4854; }
+.award.gold .what { color: #8A6A08; } .award.bad .what { color: #C2382C; }
 .chips .chip.chief { background: #E8C547; color: var(--ink); }
 .chips .chip.mcw { background: var(--red); color: var(--ink); }
 .fx-layer { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 15; }
 @media (max-width: 860px) {
   .host { height: auto; display: block; padding: 20px 16px; }
-  .host .rows { margin-top: 28px; }
+  .host .board { margin-top: 28px; }
+  .polaroids { grid-template-columns: 1fr; gap: 34px; }
   .total { margin-top: 22px; }
   .host footer { opacity: 1; margin-top: 24px; }
 }
@@ -166,9 +191,9 @@ const TOPIC = 'kay-casefile-45e8996732438867';
 const RELAY = 'https://ntfy.sh/' + TOPIC;
 
 const CASES = [
-  { n: '01', t: 'The birthday bet', s: 'Rock Paper Scissors decided. I jumped.' },
-  { n: '02', t: 'The test centre', s: 'Four attempts. Four brand-new ways to fail.' },
-  { n: '03', t: 'The golden circle', s: 'Paid for standing. Watched Green Day from the front.' },
+  { n: '01', t: 'The birthday bet', s: 'Rock Paper Scissors decided. I jumped.', img: 'bungee', rot: -3 },
+  { n: '02', t: 'The test centre', s: 'Four attempts. Four brand-new ways to fail.', img: 'car', rot: 2.2 },
+  { n: '03', t: 'The golden circle', s: 'Paid for standing. Watched Green Day from the front.', img: 'concert', rot: -2.4 },
 ];
 const CONF = [['\u{1F914}', 'Just a hunch'], ['\u{1F9D0}', 'Pretty sure'], ['\u{1F96A}', 'I\u2019d bet my lunch']];
 const EMOJI = ['\u{1F602}', '\u{1F914}', '\u{1F6A8}', '\u{1F644}', '\u{1F631}'];
@@ -500,21 +525,26 @@ function buildHost() {
     h('section', { class: 'left' },
       h('h1', { id: 'h-title' }, 'Pin ', h('br'), h('em', {}, 'the lie.')),
       h('p', { class: 'sub', id: 'h-sub' }),
-      h('div', { class: 'join', id: 'h-join' },
+      h('div', { class: 'join note', id: 'h-join' },
         h('div', { class: 'qr', id: 'qr', 'aria-label': 'QR code for the voting page' }),
         h('div', {}, h('div', { class: 'how' }, 'Scan to vote'), h('div', { class: 'url' }, VOTER_URL.replace(/^https?:\/\//, '')))),
       h('div', { class: 'awards hidden', id: 'h-awards' }),
       h('div', { class: 'total' },
         h('div', { class: 'cap', id: 'h-cap' }, 'votes in'),
         h('div', { class: 'feed', id: 'h-feed' }))),
-    h('section', { class: 'rows' }, CASES.map((c, i) =>
-      h('div', { class: 'row', id: 'row' + i },
-        h('div', { class: 'n' }, c.n),
-        h('div', {},
-          h('div', { class: 't' }, h('span', {}, c.t), h('span', { class: 'count', id: 'count' + i })),
+    h('section', { class: 'board', id: 'board' },
+      h('div', { class: 'polaroids' }, CASES.map((c, i) =>
+        h('div', { class: 'pcol', id: 'row' + i, style: `--rot:${c.rot}deg` },
+          h('figure', { class: 'polaroid' },
+            h('span', { class: 'pin', id: 'pin' + i }),
+            h('div', { class: 'photo' },
+              h('img', { src: `../img/${c.img}.jpg`, alt: c.t, onload: drawStrings }),
+              h('div', { class: 'stampwrap' }, h('div', { class: 'stamp hidden', id: 'stamp' + i }))),
+            h('figcaption', {}, `${c.n} \u00b7 ${c.t.toLowerCase()}`)),
+          h('div', { class: 'meta' }, h('span', { class: 'count', id: 'count' + i })),
           h('div', { class: 'bar-track' }, h('div', { class: 'bar-fill', id: 'bar' + i })),
-          h('div', { class: 'chips', id: 'chips' + i })),
-        h('div', { class: 'row-stamp stamp hidden', id: 'stamp' + i })))),
+          h('div', { class: 'chips', id: 'chips' + i })))),
+      svgEl('svg', { class: 'strings', id: 'strings' })),
     h('footer', {},
       h('button', { class: 'ctl primary', id: 'b-lock', onclick: lockWithCountdown }, 'Lock votes (3-2-1)'),
       h('button', { class: 'ctl', id: 'b-unlock', onclick: () => command({ t: 'unlock', r: state.round }) }, 'Reopen voting'),
@@ -524,9 +554,32 @@ function buildHost() {
       h('button', { class: 'ctl', id: 'b-names', onclick: () => { showNames = !showNames; store.set('names', showNames ? 'on' : 'off'); renderHost(state); } }),
       h('button', { class: 'ctl', onclick: copyLink, id: 'b-copy' }, 'Copy voter link'),
       h('button', { class: 'ctl danger', onclick: resetRound }, 'New round'))));
+  addEventListener('resize', drawStrings);
+  document.fonts?.ready.then(drawStrings);
+  requestAnimationFrame(drawStrings);
   try {
     new QRCode(document.getElementById('qr'), { text: VOTER_URL, width: 400, height: 400, colorDark: '#0B0D12', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
   } catch { document.getElementById('qr').classList.add('hidden'); }
+}
+
+function svgEl(tag, attrs = {}) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  return el;
+}
+
+function drawStrings() {
+  const svg = document.getElementById('strings'), board = document.getElementById('board');
+  if (!svg || !board) return;
+  const b = board.getBoundingClientRect();
+  const pins = CASES.map((_, i) => {
+    const r = document.getElementById('pin' + i).getBoundingClientRect();
+    return { x: r.left + r.width / 2 - b.left, y: r.top + r.height / 2 - b.top, gone: state.answer === i + 1 };
+  });
+  const sag = (a, c, droop) => `M ${a.x} ${a.y} Q ${(a.x + c.x) / 2} ${(a.y + c.y) / 2 + droop} ${c.x} ${c.y}`;
+  const lines = [[0, 1, 26], [1, 2, 26], [0, 2, 70]].filter(([i, j]) => !pins[i].gone && !pins[j].gone);
+  svg.replaceChildren(...lines.map(([i, j, d], k) => svgEl('path', { d: sag(pins[i], pins[j], d), fill: 'none',
+    stroke: k === 2 ? '#a8211c' : '#c8261f', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: .95 })));
 }
 
 function renderHost(prev) {
@@ -600,6 +653,11 @@ function renderHost(prev) {
   awardsEl.classList.toggle('hidden', !S.answer);
   if (S.answer && lastAnswer !== S.answer) renderAwards(awardsEl, awards, firstReveal ? 1100 + 3 * 750 + 400 : 0);
 
+  if (S.answer) {
+    const lie = document.getElementById('row' + (S.answer - 1));
+    lie.style.setProperty('--swing-delay', (firstReveal ? stampDelay(S.answer - 1) + 380 : 0) + 'ms');
+    setTimeout(drawStrings, firstReveal ? stampDelay(S.answer - 1) + 400 : 0);
+  } else drawStrings();
   if (firstReveal) {
     sfx.sting();
     setTimeout(confetti, stampDelay(S.answer - 1) + 250);
@@ -625,7 +683,7 @@ function renderAwards(el, a, delay) {
     : mcw.c === 2 ? `Was \u201cpretty sure\u201d it was Case ${CASES[mcw.p - 1].n}.`
     : `Had a hunch about Case ${CASES[mcw.p - 1].n}.`;
   const card = (cls, icon, what, who, why, d) => {
-    const c = h('div', { class: 'award ' + cls }, h('div', { class: 'icon' }, icon),
+    const c = h('div', { class: 'award note ' + cls }, h('div', { class: 'icon' }, icon),
       h('div', {}, h('div', { class: 'what' }, what), h('div', { class: 'who' }, who), h('div', { class: 'why' }, why)));
     c.style.animationDelay = d + 'ms';
     return c;
